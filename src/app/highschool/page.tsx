@@ -1,102 +1,81 @@
 'use client';
+
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { doc, updateDoc } from "firebase/firestore";
+import { useUser } from "@/hooks/useUser";
+import { db } from "@/lib/firebase";
+
+import FlowAssist from "@/components/ui/highschool/flowassist";
+import StudyPlanner from "@/components/ui/highschool/StudyPlanner";
+import AIStudyAssistant from "@/components/ui/highschool/AIStudyAssistant";
+import AITutor from "@/components/ui/highschool/AITutor";
+import WellnessTools from "@/components/ui/highschool/WellnessTools";
+import LoginForm from "@/components/auth/LoginForm";
 
 export default function HighSchoolDashboard() {
+  const { user, loading, expired } = useUser();
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+
+  useEffect(() => {
+    if (user && user.firstLoginDone === false) {
+      setWelcomeMessage("🎉 Welcome to UniFlow!");
+
+      // ✅ Mark first login complete
+      updateDoc(doc(db, "users", user.uid), {
+        firstLoginDone: true,
+      });
+    } else if (user) {
+      setWelcomeMessage("👋 Welcome back to UniFlow");
+    }
+  }, [user]);
+
   const cardClass =
     'mb-6 p-5 bg-white/20 rounded-xl shadow-lg backdrop-blur-xl border border-white/30 hover:scale-[1.01] transition-transform duration-300';
 
+  if (loading) return <p className="p-6 text-white">Loading...</p>;
+  if (!user) return <LoginForm />;
+  if (expired) {
+    return (
+      <main className="p-6 text-white min-h-screen flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold mb-4">⚠️ Trial Expired</h1>
+        <p className="mb-4 text-white/70">Your 7-day free trial has ended. Please upgrade to continue using UniFlow.</p>
+        <button className="bg-white text-black px-4 py-2 rounded hover:bg-gray-200">
+          Upgrade Now
+        </button>
+      </main>
+    );
+  }
+
   return (
     <main className="p-6 min-h-screen bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 text-white">
-      <h1 className="text-3xl font-bold mb-6">High School Student Dashboard</h1>
+      {welcomeMessage && <h1 className="text-3xl font-bold mb-6">{welcomeMessage}</h1>}
 
-      <motion.section
-        className={cardClass}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <h2 className="text-xl font-semibold mb-2 text-white">🎓 FlowAssist</h2>
-        <p className="text-gray-200">
-          Your all-in-one AI assistant: ask questions, plan study time, get reminders, and track progress.
-        </p>
+      <motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <FlowAssist />
       </motion.section>
 
-      <motion.section
-        className={cardClass}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      >
-        <h2 className="text-xl font-semibold mb-2 text-white">📅 Smart Study Planner</h2>
-        <p className="text-gray-200">
-          Based on your subjects, tests, and deadlines — FlowAssist recommends what to study and when.
-        </p>
+      <motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
+        <StudyPlanner />
       </motion.section>
 
-      <motion.section
-        className={cardClass}
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        <h2 className="text-xl font-semibold mb-2 text-white">📚 AI Study Assistant</h2>
-        <ul className="list-disc ml-5 text-gray-200">
-          <li>Upload notes or textbooks to get instant AI summaries</li>
-          <li>Break down long content into clear, digestible chunks</li>
-          <li>Create smart flashcards from any topic</li>
-          <li>Generate custom past paper-style questions with memos</li>
-        </ul>
+      <motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
+        <AIStudyAssistant />
       </motion.section>
 
       <motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}>
-  <h2 className="text-xl font-semibold mb-2 text-white">🧑‍🏫 AI Tutor</h2>
-  <ul className="list-disc ml-5 text-gray-200">
-    <li>Choose tutor style: strict, fun, chill, etc.</li>
-    <li>Learn via video, audio, or live Q&A</li>
-    <li>Escalate to real tutors if needed</li>
-  </ul>
-</motion.section>
+        <AITutor />
+      </motion.section>
 
-<motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}>
-  <h2 className="text-xl font-semibold mb-2 text-white">🧘 Mental Wellness Tools</h2>
-  <ul className="list-disc ml-5 text-gray-200">
-    <li>Mood check-ins, burnout detection</li>
-    <li>Motivational nudges + recharge vault</li>
-    <li>Vent space + imposter syndrome support</li>
-  </ul>
-</motion.section>
-
-<motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}>
-  <h2 className="text-xl font-semibold mb-2 text-white">🧠 Digital Hub</h2>
-  <ul className="list-disc ml-5 text-gray-200">
-    <li>Smart inbox for academic updates</li>
-    <li>Lecture summaries, research digests</li>
-    <li>Digital student ID</li>
-  </ul>
-</motion.section>
-
-<motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.6 }}>
-  <h2 className="text-xl font-semibold mb-2 text-white">🧭 Career Coaching</h2>
-  <ul className="list-disc ml-5 text-gray-200">
-    <li>AI-generated career paths</li>
-    <li>Salary expectations, study strategy</li>
-  </ul>
-</motion.section>
-
-<motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.7 }}>
-  <h2 className="text-xl font-semibold mb-2 text-white">🔗 SkillSync Integration</h2>
-  <ul className="list-disc ml-5 text-gray-200">
-    <li>Jobs, internships, tutoring gigs</li>
-    <li>AI-enhanced CV + interview prep</li>
-  </ul>
-</motion.section>
-
-
-      {/* Add more <motion.section> blocks below for the rest of the features... */}
-
+      <motion.section className={cardClass} initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.4 }}>
+        <WellnessTools />
+      </motion.section>
     </main>
   );
 }
+
+
+
 
   
   
