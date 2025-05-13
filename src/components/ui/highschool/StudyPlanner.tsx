@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { differenceInCalendarDays } from "date-fns";
+import { useUser } from "@/hooks/useUser";
 
 export default function StudyPlanner() {
+  const { user } = useUser();
   const [subject, setSubject] = useState("");
   const [date, setDate] = useState("");
   const [style, setStyle] = useState("focused");
@@ -27,17 +29,25 @@ export default function StudyPlanner() {
   };
 
   const handlePlan = async () => {
+    if (!user?.uid) return;
+
     setLoading(true);
     const prompt = generatePrompt();
 
     const res = await fetch("/api/flowassist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: prompt }),
+      body: JSON.stringify({ message: prompt, userId: user.uid }),
     });
 
+    if (res.status === 403) {
+      setPlan("⚠️ You've reached your free trial token limit. Upgrade to generate personalized study plans.");
+      setLoading(false);
+      return;
+    }
+
     const data = await res.json();
-    setPlan(data.reply);
+    setPlan(data.reply || "⚠️ Sorry, no response received.");
     setLoading(false);
   };
 

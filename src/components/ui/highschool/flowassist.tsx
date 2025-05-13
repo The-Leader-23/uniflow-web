@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useUser } from "@/hooks/useUser";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,12 +17,13 @@ const quickPrompts = [
 ];
 
 export default function FlowAssist() {
+  const { user } = useUser();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !user?.uid) return;
 
     const userMessage: Message = { role: "user", content: input };
     const updatedMessages = [...messages, userMessage];
@@ -34,8 +36,21 @@ export default function FlowAssist() {
       const res = await fetch("/api/flowassist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, userId: user.uid }),
       });
+
+      if (res.status === 403) {
+        setMessages([
+          ...updatedMessages,
+          {
+            role: "assistant",
+            content:
+              "⚠️ You've reached your free token limit. Upgrade to keep using FlowAssist.",
+          },
+        ]);
+        setLoading(false);
+        return;
+      }
 
       const data = await res.json();
 
@@ -122,6 +137,7 @@ export default function FlowAssist() {
     </div>
   );
 }
+
 
 
   

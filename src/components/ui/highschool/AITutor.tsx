@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { useUser } from "@/hooks/useUser";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -31,6 +32,7 @@ const quickPrompts = [
 ];
 
 export default function AITutor() {
+  const { user } = useUser();
   const [styleKey, setStyleKey] = useState<"strict" | "chill" | "fun">("strict");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -40,7 +42,7 @@ export default function AITutor() {
   const style = tutorStyles[styleKey];
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !user?.uid) return;
 
     const userMessage: Message = { role: "user", content: input };
     const history = [
@@ -57,17 +59,28 @@ export default function AITutor() {
       const res = await fetch("/api/aitutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, userId: user.uid }),
       });
 
-      const data = await res.json();
+      if (res.status === 403) {
+        setMessages([
+          ...messages,
+          {
+            role: "assistant",
+            content: "⚠️ You've used up your free trial tokens. Please upgrade to continue using UniFlow.",
+          },
+        ]);
+        setLoading(false);
+        return;
+      }
 
+      const data = await res.json();
       const assistantMessage: Message = {
         role: "assistant",
         content: data.reply || "⚠️ No response from tutor.",
       };
 
-      setMessages([...messages, userMessage, assistantMessage]);
+      setMessages([...messages, assistantMessage]);
     } catch (err) {
       setMessages([
         ...messages,

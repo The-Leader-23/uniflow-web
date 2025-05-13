@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -11,20 +12,24 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [greeting, setGreeting] = useState("👋 Welcome back to UniFlow");
 
+  const router = useRouter();
+
   const handleLogin = async () => {
     setError("");
 
     try {
-      // Step 1: Sign in
+      // Firebase Auth login
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       const uid = userCred.user.uid;
 
-      // Step 2: Check Firestore for firstLoginDone field
+      // Check if it's the user's first login
       const userDoc = await getDoc(doc(db, "users", uid));
       const isFirstTime = userDoc.exists() && userDoc.data()?.firstLoginDone === false;
 
-      // Step 3: Show appropriate greeting
       setGreeting(isFirstTime ? "🎉 Welcome to UniFlow" : "👋 Welcome back to UniFlow");
+
+      // Redirect after login
+      router.push("/dashboard");
 
     } catch (err: any) {
       setError(err.message);
@@ -42,6 +47,7 @@ export default function LoginForm() {
         onChange={(e) => setEmail(e.target.value)}
         className="p-2 w-full rounded bg-white/10 border border-white/20"
       />
+
       <input
         type="password"
         placeholder="Password"
@@ -49,6 +55,7 @@ export default function LoginForm() {
         onChange={(e) => setPassword(e.target.value)}
         className="p-2 w-full rounded bg-white/10 border border-white/20"
       />
+
       <button
         onClick={handleLogin}
         className="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded"
@@ -60,3 +67,5 @@ export default function LoginForm() {
     </div>
   );
 }
+
+

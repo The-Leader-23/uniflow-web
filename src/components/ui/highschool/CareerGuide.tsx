@@ -9,13 +9,7 @@ interface Message {
   content: string;
 }
 
-const starterPrompts = [
-  "I'm feeling stressed, any advice?",
-  "Give me a quick motivation boost",
-  "How can I manage exam anxiety?",
-];
-
-export default function WellnessTools() {
+export default function CareerGuide() {
   const { user } = useUser();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,7 +26,7 @@ export default function WellnessTools() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/wellnesstools", {
+      const res = await fetch("/api/careerguide", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input, userId: user.uid }),
@@ -44,7 +38,7 @@ export default function WellnessTools() {
           {
             role: "assistant",
             content:
-              "⚠️ You've used your free trial tokens. Upgrade for unlimited wellness support and motivation.",
+              "⚠️ You've reached your free token limit. Upgrade for full career advice and university rankings.",
           },
         ]);
         setLoading(false);
@@ -55,14 +49,14 @@ export default function WellnessTools() {
 
       const assistantMessage: Message = {
         role: "assistant",
-        content: data.reply || "⚠️ No support message received.",
+        content: data.reply || "⚠️ No guidance received.",
       };
 
       setMessages([...updatedMessages, assistantMessage]);
     } catch (err) {
       setMessages([
         ...updatedMessages,
-        { role: "assistant", content: "⚠️ Something went wrong. Please try again." },
+        { role: "assistant", content: "⚠️ Something went wrong. Try again later." },
       ]);
     }
 
@@ -71,24 +65,12 @@ export default function WellnessTools() {
 
   return (
     <div className="bg-white/10 p-6 rounded-xl backdrop-blur-sm border border-white/20 w-full max-w-xl mx-auto text-white">
-      <h2 className="text-2xl font-bold mb-4">🧘 Mental Wellness Tools</h2>
-
-      <div className="flex flex-wrap gap-2 mb-4">
-        {starterPrompts.map((prompt, idx) => (
-          <button
-            key={idx}
-            onClick={() => setInput(prompt)}
-            className="text-sm px-3 py-1 rounded bg-white/20 border border-white/30 hover:bg-white/30 transition"
-          >
-            {prompt}
-          </button>
-        ))}
-      </div>
+      <h2 className="text-2xl font-bold mb-4">🧭 Real Talk Career Guide</h2>
 
       <div className="h-64 overflow-y-auto mb-4 space-y-3 bg-black/10 p-4 rounded border border-white/10">
         {messages.length === 0 && (
           <p className="text-white/60 italic">
-            Talk to your wellness assistant for support or motivation.
+            Ask about your dream career or which uni is best for your goals...
           </p>
         )}
 
@@ -97,7 +79,7 @@ export default function WellnessTools() {
             key={idx}
             className={`p-3 rounded-lg max-w-[80%] whitespace-pre-wrap ${
               msg.role === "user"
-                ? "ml-auto bg-teal-500 text-white"
+                ? "ml-auto bg-blue-500 text-white"
                 : "mr-auto bg-white text-black"
             }`}
           >
@@ -115,7 +97,7 @@ export default function WellnessTools() {
       <div className="flex gap-2">
         <input
           type="text"
-          placeholder="Vent, ask for support, or get a boost..."
+          placeholder="e.g. 'I want to become an actuary but also value speed and impact.'"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-3 rounded bg-black/20 border border-white/20"
